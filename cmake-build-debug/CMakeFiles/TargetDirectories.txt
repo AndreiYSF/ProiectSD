@@ -1,0 +1,3 @@
+/Users/iosif/Documents/projects/JetBrains/C++/ProiectSD/cmake-build-debug/CMakeFiles/ProiectSD.dir
+/Users/iosif/Documents/projects/JetBrains/C++/ProiectSD/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/iosif/Documents/projects/JetBrains/C++/ProiectSD/cmake-build-debug/CMakeFiles/rebuild_cache.dir
