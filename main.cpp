@@ -14,7 +14,6 @@ using namespace std;
 //    cout << duration.count();
 //}
 
-
 void display(vector <double> v) {
 
     for (auto &i : v)
@@ -220,11 +219,74 @@ void ShellSort(vector<double> &v) {
     }
 }
 
+void QuickSortExt(vector <double>& v, int l, int r) {
+
+    if(l >= r) return;
+
+    int m = (l + r) / 2;
+
+    if (v[l] > v[m])
+        swap(v[l], v[m]);
+    if (v[l] > v[r])
+        swap(v[l], v[r]);
+    if (v[m] > v[r])
+        swap(v[m], v[r]);
+    swap(v[m], v[r]);
+
+    double pivot = v[r];
+    int i = l;
+
+    for(int j = l; j < r; j++) {
+        if(v[j] < pivot) {
+            swap(v[i], v[j]);
+            i++;
+        }
+    }
+
+    swap(v[i], v[r]);
+    QuickSortExt(v, l, i - 1);
+    QuickSortExt(v, i + 1, r);
+}
+
+void QuickSort(vector <double>& v) {
+
+    if (v.size() <= 1)
+        return;
+    QuickSortExt(v, 0, v.size() - 1);
+}
+
+void heapify(vector<double>& v, int n, int i) {
+
+    int largest = i, l = 2 * i + 1, r = 2 * i + 2;
+
+    if(l < n && v[l] > v[largest])
+        largest = l;
+    if(r < n && v[r] > v[largest])
+        largest = r;
+
+    if(largest != i) {
+
+        swap(v[i], v[largest]);
+        heapify(v, n, largest);
+    }
+}
+
+void HeapSort(vector<double>& v) {
+
+    int n = v.size();
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(v, n, i);
+    for (int i = n - 1; i > 0; i--) {
+        swap(v[0], v[i]);
+        heapify(v, i, 0);
+    }
+}
+
 int main() {
 
     vector<double> v = {1, 8, 2, 55, 112, 12, 342, 2};
 
-    ShellSort(v);
+    HeapSort(v);
 
     cout << isSorted(v);
 
