@@ -1,358 +1,295 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <chrono>
+#include <cmath>
+#include <algorithm>
+#include <random>
+#include <fstream>
 using namespace std;
 
-//void fc() {
-//
-//    auto start = chrono::high_resolution_clock::now();
-//
-//    this_thread::sleep_for(std::chrono::milliseconds(500));
-//
-//    auto end = chrono::high_resolution_clock::now();
-//
-//    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-//
-//    cout << duration.count();
-//}
+const int MAX = 1000000 + 5;
 
-void display(vector <double> v) {
+ofstream fout("number.in");
 
-    for (auto &i : v)
-        cout << i << ' ';
-    cout << '\n';
+// auxiliar memory init
+double *Left = new double [MAX];
+double *Right = new double [MAX];
+double *aux = new double [MAX];
+
+void display(double *arr, int n) {
+    for (int i = 0; i < n; i++)
+        cout << arr[i] << " ";
+    cout << "\n";
 }
 
-// verifica daca un vector este sortat
-bool isSorted(vector<double> &v) {
-
-    for (int i = 0; i < v.size() - 1; i++)
-        if (v[i] > v[i + 1])
+bool isSorted(double *arr, int n) {
+    for (int i = 1; i < n - 1; i++)
+        if (arr[i] > arr[i + 1]) {
             return false;
+        }
     return true;
 }
 
-// RadixSort clasic
-void RadixSort1(vector<double> &v) {
+void RadixSort1(double *arr, int n) {
 
-    vector<int> aux;
+    for (int i = 1; i <= n; i++) {
 
-    for (auto &i: v) {
 
-        aux.push_back(i);
-        if (floor(i) != i) {
+        if (floor(arr[i]) != arr[i]) {
 
-            aux.clear();
             cout << "RadixSort1 nu a putut executa sortarea.\n";
             return;
         }
     }
 
     for (int k = 0; k <= 30; k++) {
+        bool ok = true; // verifica daca toate elementele sunt < 2^k
+        int p = (1 << k);
 
-        bool ok = true; // verifica daca totate elementele sunt mai mici strict decat 2^k
+        int x = 0, y = 0;
 
-        int pow = (1 << k);
-
-        queue<int> leftSide, rightSide;
-
-        for (int i = 0; i < aux.size(); i++) {
-
-            if (aux[i] >= pow)
+        for (int i = 0; i < n; i++) {
+            if (arr[i] >= p)
                 ok = false;
-
-            if (aux[i] & pow)
-                rightSide.push(aux[i]);
+            if (int(arr[i]) & p)
+                Right[y++] = arr[i];
             else
-                leftSide.push(aux[i]);
+                Left[x++] = arr[i];
         }
 
-        aux.clear();
-        while (!leftSide.empty())
-            aux.push_back(leftSide.front()), leftSide.pop();
-        while (!rightSide.empty())
-            aux.push_back(rightSide.front()), rightSide.pop();
+        for (int i = 0; i < x; i++) {
+            arr[i] = Left[i];
+        }
+        for (int i = 0; i < y; i++) {
+            arr[x + i] = Right[i];
+        }
 
         if (ok)
             break;
     }
-
-    v.clear();
-    for (auto &i: aux)
-        v.push_back(i);
 }
 
-// RadixSort baza 10
-void RadixSort2(vector<double> &v) {
+void RadixSort2(double *arr, int n) {
 
-    vector<int> aux;
-
-    for (auto &i: v) {
-
-        aux.push_back(i);
-        if (floor(i) != i) {
-
-            aux.clear();
-            cout << "RadixSort1 nu a putut executa sortarea.\n";
+    for (int i = 1; i <= n; i++) {
+        if (floor(arr[i]) != arr[i]) {
+            cout << "RadixSort2 nu a putut executa sortarea.\n";
             return;
         }
     }
 
-    queue<int> Q[10];
+    int pow = 1;
+    int auxSize = n;
 
-    for (int k = 0, pow = 1; k <= 9; k++, pow *= 10) {
+    int **Q = new int *[10];
+    for (int d = 0; d < 10; d++) {
+        Q[d] = new int[n];
+    }
 
-        bool ok = true; // verifica daca totate elementele sunt mai mici strict decat 10^k
+    for (int k = 0; k <= 9; k++) {
 
-        for (int i: aux) {
+        bool ok = true;
+        int cnt[10] = {0};
 
-            if (i >= pow)
+        for (int i = 0; i < auxSize; i++) {
+            if (arr[i] >= pow)
                 ok = false;
-
-            int cif = (i / pow) % 10;
-
-            Q[cif].push(i);
+            int digit = (int(arr[i]) / pow) % 10;
+            Q[digit][cnt[digit]++] = arr[i];
         }
 
-        aux.clear();
-        for (auto &i: Q)
-            while (!i.empty())
-                aux.push_back(i.front()), i.pop();
+        int index = 0;
+        for (int d = 0; d < 10; d++) {
+            for (int j = 0; j < cnt[d]; j++) {
+                arr[index++] = Q[d][j];
+            }
+        }
 
         if (ok)
             break;
+        pow *= 10;
     }
 
-    v.clear();
-    for (auto &i: aux)
-        v.push_back(i);
+    for (int d = 0; d < 10; d++) {
+        delete[] Q[d];
+    }
+    delete[] Q;
 }
 
-// RadixSort baza 2^16 = 65636
-void RadixSort3(vector<double> &v) {
+// RadixSort3 (baza 2^16 = 65636)
+void RadixSort3(double *arr, int n) {
 
     const int b = 65636;
 
-    vector<int> aux;
+    for (int i = 1; i <= n; i++) {
 
-    for (auto &i: v) {
-
-        aux.push_back(i);
-        if (floor(i) != i) {
-
-            aux.clear();
-            cout << "RadixSort1 nu a putut executa sortarea.\n";
+        if (floor(arr[i]) != arr[i]) {
+            cout << "RadixSort3 nu a putut executa sortarea.\n";
             return;
         }
     }
 
-    queue<int> Q[b];
+    queue<double> Q[b];
 
     for (int pow: {1, b}) {
 
-        for (int i: aux) {
-
-            int cif = (i / pow) % b;
-
-            Q[cif].push(i);
+        for (int i = 1; i <= n; i++) {
+            int cif = (int(arr[i]) / pow) % b;
+            Q[cif].push(arr[i]);
         }
 
-        aux.clear();
-        for (auto &i: Q)
-            while (!i.empty())
-                aux.push_back(i.front()), i.pop();
+        int index = 0;
+        for (int i = 0; i < b; i++) {
+            while (!Q[i].empty()) {
+                arr[++index] = Q[i].front();
+                Q[i].pop();
+            }
+        }
     }
-
-    v.clear();
-    for (auto &i: aux)
-        v.push_back(i);
 }
 
-void MergeSort(vector<double> &v) {
+void MergeSortExt(double *arr, int l, int r) {
 
-    if (v.size() == 1)
+    if (l >= r)
         return;
 
-    vector<double> left, right;
+    int m = (l + r) >> 1;
 
-    int i = 0;
+    MergeSortExt(arr, l, m);
+    MergeSortExt(arr, m + 1, r);
 
-    while (left.size() < (v.size() / 2))
-        left.push_back(v[i++]);
-    while (i < v.size())
-        right.push_back(v[i++]);
+    int i = l, j = m + 1, k = 0;
 
-    MergeSort(left);
-    MergeSort(right);
-
-    i = 0;
-    int j = 0, k = 0;
-
-    while (i < left.size() && j < right.size())
-        if (left[i] < right[j])
-            v[k++] = left[i++];
+    while (i <= m && j <= r)
+        if (arr[i] < arr[j])
+            aux[++k] = arr[i++];
         else
-            v[k++] = right[j++];
+            aux[++k] = arr[j++];
 
-    while (i < left.size())
-        v[k++] = left[i++];
-    while (j < right.size())
-        v[k++] = right[j++];
+    while (i <= m)
+        aux[++k] = arr[i++];
+    while (j <= r)
+        aux[++k] = arr[j++];
+
+    for (i = l; i <= r; i++)
+        arr[i] = aux[i - l + 1];
 }
 
-void ShellSort(vector<double> &v) {
+void MergeSort(double *arr, int n) {
+    MergeSortExt(arr, 0, n - 1);
+}
 
-    int n = v.size();
-
+// ShellSort using arrays only
+void ShellSort(double *arr, int n) {
     for (int gap = n / 2; gap > 0; gap /= 2) {
-
         for (int i = gap; i < n; i++) {
-
-            double aux = v[i];
+            double temp = arr[i];
             int j = i;
-
-            while (j >= gap && v[j - gap] > aux) {
-
-                v[j] = v[j - gap];
+            while (j >= gap && arr[j - gap] > temp) {
+                arr[j] = arr[j - gap];
                 j -= gap;
             }
-            v[j] = aux;
+            arr[j] = temp;
         }
     }
 }
 
-void QuickSortExt(vector <double>& v, int l, int r) {
+// QuickSort extension (recursive) using arrays only
+void QuickSortExt(double *arr, int l, int r) {
 
-    if(l >= r) return;
+    if (l >= r) return;
 
     int m = (l + r) / 2;
+    if (arr[l] > arr[m])
+        swap(arr[l], arr[m]);
+    if (arr[l] > arr[r])
+        swap(arr[l], arr[r]);
+    if (arr[m] > arr[r])
+        swap(arr[m], arr[r]);
+    swap(arr[m], arr[r]);
 
-    // l, m, r
-
-    if (v[l] > v[m])
-        swap(v[l], v[m]);
-    if (v[l] > v[r])
-        swap(v[l], v[r]);
-    if (v[m] > v[r])
-        swap(v[m], v[r]);
-    swap(v[m], v[r]);
-
-    double pivot = v[r];
+    double pivot = arr[r];
     int i = l;
-
-    for(int j = l; j < r; j++) {
-        if(v[j] < pivot) {
-            swap(v[i], v[j]);
+    for (int j = l; j < r; j++) {
+        if (arr[j] < pivot) {
+            swap(arr[i], arr[j]);
             i++;
         }
     }
-
-    swap(v[i], v[r]);
-
-    QuickSortExt(v, l, i - 1);
-    QuickSortExt(v, i + 1, r);
+    swap(arr[i], arr[r]);
+    QuickSortExt(arr, l, i - 1);
+    QuickSortExt(arr, i + 1, r);
 }
 
-void QuickSort(vector <double>& v) {
-
-    if (v.size() <= 1)
-        return;
-    QuickSortExt(v, 0, v.size() - 1);
+void QuickSort(double *arr, int n) {
+    QuickSortExt(arr, 0, n - 1);
 }
 
-void heapify(vector<double>& v, int n, int i) {
+void heapify(double *arr, int n, int i) {
 
     int largest = i, l = 2 * i + 1, r = 2 * i + 2;
-
-    if(l < n && v[l] > v[largest])
+    if (l < n && arr[l] > arr[largest])
         largest = l;
-    if(r < n && v[r] > v[largest])
+    if (r < n && arr[r] > arr[largest])
         largest = r;
-
-    if(largest != i) {
-
-        swap(v[i], v[largest]);
-        heapify(v, n, largest);
+    if (largest != i) {
+        swap(arr[i], arr[largest]);
+        heapify(arr, n, largest);
     }
 }
 
-void HeapSort(vector<double>& v) {
-
-    int n = v.size();
+void HeapSort(double *arr, int n) {
     for (int i = n / 2 - 1; i >= 0; i--)
-        heapify(v, n, i);
+        heapify(arr, n, i);
     for (int i = n - 1; i > 0; i--) {
-        swap(v[0], v[i]);
-        heapify(v, i, 0);
+        swap(arr[0], arr[i]);
+        heapify(arr, i, 0);
     }
 }
 
-// sort using AVL tree
-
-class Set{
-
+class Set {
 private:
-
     struct node {
-
         double key;
         int frg;
         node *left, *right;
         int height;
 
-        node(double k) {
-            key = k;
-            frg = 1;
-            left = right = NULL;
-            height = 1;
-        }
+        node(double k) : key(k), frg(1), left(NULL), right(NULL), height(1) {}
     };
 
     node *root;
 
     int height(node *x) {
-        if (x == NULL)
-            return 0;
-        return x->height;
+        return x == NULL ? 0 : x->height;
     }
 
     int getBalanced(node *x) {
-        if (x == NULL)
-            return 0;
-        return height(x->left) - height(x->right);
+        return x == NULL ? 0 : height(x->left) - height(x->right);
     }
 
     node *toRight(node *x) {
-
         node *y = x->left;
         node *z = y->right;
-
         y->right = x;
         x->left = z;
-
         x->height = max(height(x->left), height(x->right)) + 1;
         y->height = max(height(y->left), height(y->right)) + 1;
-
         return y;
     }
 
     node *toLeft(node *x) {
-
         node *y = x->right;
         node *z = y->left;
-
         y->left = x;
         x->right = z;
-
         x->height = max(height(x->left), height(x->right)) + 1;
         y->height = max(height(y->left), height(y->right)) + 1;
-
         return y;
     }
 
-    node* addNode(node *x, double key) {
-
+    node *addNode(node *x, double key) {
         if (x == NULL)
             return new node(key);
-
         if (key < x->key)
             x->left = addNode(x->left, key);
         else if (key > x->key)
@@ -366,7 +303,6 @@ private:
         int balance = getBalanced(x);
 
         if (balance > 1) {
-
             if (getBalanced(x->left) >= 0)
                 return toRight(x);
             else {
@@ -375,7 +311,6 @@ private:
             }
         }
         else if (balance < -1) {
-
             if (getBalanced(x->right) <= 0)
                 return toLeft(x);
             else {
@@ -383,12 +318,10 @@ private:
                 return toLeft(x);
             }
         }
-
         return x;
     }
 
     void clean(node *x) {
-
         if (x == NULL)
             return;
         clean(x->left);
@@ -396,61 +329,127 @@ private:
         delete x;
     }
 
-    void rec(node *x, vector <double>& v) {
-
+    void rec(node *x, double *arr, int &idx) {
         if (x == NULL)
             return;
-
-        rec(x->left, v);
-        for (int i = 1; i <= x->frg; i++)
-            v.push_back(x->key);
-        rec(x->right, v);
+        rec(x->left, arr, idx);
+        for (int i = 0; i < x->frg; i++) {
+            arr[++idx] = x->key;
+        }
+        rec(x->right, arr, idx);
     }
 
 public:
+    Set() { root = NULL; }
 
-    Set() {
-        root = NULL;
-    }
+    ~Set() { clean(root); }
 
-    ~Set() {
-        clean(root);
-    }
-
-    void add(double k) {
-        root = addNode(root, k);
-    }
+    void add(double k) { root = addNode(root, k); }
 
     void reset() {
         clean(root);
         root = NULL;
     }
 
-    void generateVector(vector <double>& v) {
+    void generateArray(double *arr) {
 
-        rec(root, v);
+        int idx = 0;
+        rec(root, arr, idx);
     }
 };
 
-void AVLSort(vector<double>& v) {
+void AVLSort(double *arr, int n) {
 
     Set S;
+    for (int i = 0; i < n; i++) {
+        S.add(arr[i]);
+    }
 
-    for (auto &i: v)
-        S.add(i);
-
-    v.clear();
-    S.generateVector(v);
-    S.reset();
+    S.generateArray(arr);
 }
+
+void stdSort(double *arr, int n) {
+    std::sort(arr, arr + n);
+}
+
+typedef void (*SortFunction)(double *, int);
+
+struct Sort {
+    const char *name;
+    SortFunction f;
+};
 
 int main() {
 
-    vector<double> v = {1, 8, 2, 55, 112, 12, 342, 2};
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
 
-    AVLSort(v);
+//    double arr[] = {0, 5, 4, 4, 4, 2 };
+//
+//    RadixSort3(arr, 5);
+//
+//    cout << isSorted(arr, 5) << "\n";
+//
+//    for (int i = 0; i < 5; i++) {
+//        cout << arr[i] << " ";
+//    }
+//
+//    return 0;
 
-    cout << isSorted(v);
+    int T;
+    cin >> T;
 
+    Sort sorts[] = {
+            {"RadixSort1", RadixSort1},
+            {"RadixSort2", RadixSort2},
+            {"RadixSort3", RadixSort3},
+            {"MergeSort",  MergeSort},
+            {"ShellSort",  ShellSort},
+            {"QuickSort",  QuickSort},
+            {"HeapSort",   HeapSort},
+            {"AVLSort",    AVLSort},
+            {"std::sort",  stdSort}
+    };
+    int numSorts = 9;
+
+    fout << T << '\n';
+
+    for (int t = 0; t < T; t++) {
+        int N, Max;
+        cin >> N >> Max;
+        //cout << "Test " << t + 1 << ": N = " << N << ", Max = " << Max << "\n";
+
+        fout << N << ' ' << Max << '\n';
+
+        // Allocate and generate original array of numbers
+        double *original = new double[MAX];
+        mt19937 rng(random_device{}());
+        uniform_int_distribution<int> dist(0, Max);
+        for (int i = 1; i <= N; i++) {
+            original[i] = dist(rng);
+            fout << (long long)original[i] << ' ';
+        }
+        fout << '\n';
+
+        // Run each sorting algorithm
+
+        for (int i = 0; i < numSorts; i++) {
+            double *arr = new double[MAX];
+            for (int j = 1; j <= N; j++) {
+
+                arr[j] = original[j];
+            }
+            auto start = chrono::high_resolution_clock::now();
+            sorts[i].f(arr, N);
+            auto end = chrono::high_resolution_clock::now();
+
+            auto duration = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+            bool sortedFlag = isSorted(arr, N);
+            //cout << sorts[i].name << ": " << duration << " ms, sorted: " << (sortedFlag ? "yes" : "no") << "\n";
+            delete[] arr;
+        }
+        cout << "\n";
+        delete[] original;
+    }
     return 0;
 }
