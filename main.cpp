@@ -8,12 +8,13 @@ using namespace std;
 
 const int MAX = 1000000 + 5;
 
-ofstream fout("number.in");
-
 // auxiliar memory init
-double *Left = new double [MAX];
-double *Right = new double [MAX];
-double *aux = new double [MAX];
+double *Left = new double[MAX];
+double *Right = new double[MAX];
+double *aux = new double[MAX];
+
+double *original = new double[MAX];
+double *arr = new double[MAX];
 
 void display(double *arr, int n) {
     for (int i = 0; i < n; i++)
@@ -381,20 +382,7 @@ struct Sort {
 
 int main() {
 
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-
-//    double arr[] = {0, 5, 4, 4, 4, 2 };
-//
-//    RadixSort3(arr, 5);
-//
-//    cout << isSorted(arr, 5) << "\n";
-//
-//    for (int i = 0; i < 5; i++) {
-//        cout << arr[i] << " ";
-//    }
-//
-//    return 0;
+    ifstream fin("number.in");
 
     int T;
     cin >> T;
@@ -410,31 +398,37 @@ int main() {
             {"AVLSort",    AVLSort},
             {"std::sort",  stdSort}
     };
-    int numSorts = 9;
-
-    fout << T << '\n';
+    int size = 9;
 
     for (int t = 0; t < T; t++) {
         int N, Max;
-        cin >> N >> Max;
-        //cout << "Test " << t + 1 << ": N = " << N << ", Max = " << Max << "\n";
+        char type; // i for integers / d for doubles
+        cin >> N >> Max >> type;
 
-        fout << N << ' ' << Max << '\n';
+        if (type == 'i') {
 
-        // Allocate and generate original array of numbers
-        double *original = new double[MAX];
-        mt19937 rng(random_device{}());
-        uniform_int_distribution<int> dist(0, Max);
-        for (int i = 1; i <= N; i++) {
-            original[i] = dist(rng);
-            fout << (long long)original[i] << ' ';
+            mt19937 rng(random_device{}());
+            uniform_int_distribution<int> dist(0, Max);
+
+            for (int i = 1; i <= N; i++) {
+                original[i] = dist(rng);
+            }
+
         }
-        fout << '\n';
+        else if (type == 'd') {
+
+            mt19937 rng(random_device{}());
+            uniform_real_distribution<double> dist(0, Max);
+
+            for (int i = 1; i <= N; i++) {
+                original[i] = dist(rng);
+            }
+        }
 
         // Run each sorting algorithm
 
-        for (int i = 0; i < numSorts; i++) {
-            double *arr = new double[MAX];
+        for (int i = 0; i < size; i++) {
+
             for (int j = 1; j <= N; j++) {
 
                 arr[j] = original[j];
@@ -445,11 +439,9 @@ int main() {
 
             auto duration = chrono::duration_cast<chrono::milliseconds>(end - start).count();
             bool sortedFlag = isSorted(arr, N);
-            //cout << sorts[i].name << ": " << duration << " ms, sorted: " << (sortedFlag ? "yes" : "no") << "\n";
-            delete[] arr;
+            cout << sorts[i].name << ": " << duration << " ms, sorted: " << (sortedFlag ? "yes" : "no") << "\n";
         }
         cout << "\n";
-        delete[] original;
     }
     return 0;
 }
