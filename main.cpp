@@ -225,6 +225,8 @@ void QuickSortExt(vector <double>& v, int l, int r) {
 
     int m = (l + r) / 2;
 
+    // l, m, r
+
     if (v[l] > v[m])
         swap(v[l], v[m]);
     if (v[l] > v[r])
@@ -244,6 +246,7 @@ void QuickSortExt(vector <double>& v, int l, int r) {
     }
 
     swap(v[i], v[r]);
+
     QuickSortExt(v, l, i - 1);
     QuickSortExt(v, i + 1, r);
 }
@@ -282,11 +285,170 @@ void HeapSort(vector<double>& v) {
     }
 }
 
+// sort using AVL tree
+
+class Set{
+
+private:
+
+    struct node {
+
+        double key;
+        int frg;
+        node *left, *right;
+        int height;
+
+        node(double k) {
+            key = k;
+            frg = 1;
+            left = right = NULL;
+            height = 1;
+        }
+    };
+
+    node *root;
+
+    int height(node *x) {
+        if (x == NULL)
+            return 0;
+        return x->height;
+    }
+
+    int getBalanced(node *x) {
+        if (x == NULL)
+            return 0;
+        return height(x->left) - height(x->right);
+    }
+
+    node *toRight(node *x) {
+
+        node *y = x->left;
+        node *z = y->right;
+
+        y->right = x;
+        x->left = z;
+
+        x->height = max(height(x->left), height(x->right)) + 1;
+        y->height = max(height(y->left), height(y->right)) + 1;
+
+        return y;
+    }
+
+    node *toLeft(node *x) {
+
+        node *y = x->right;
+        node *z = y->left;
+
+        y->left = x;
+        x->right = z;
+
+        x->height = max(height(x->left), height(x->right)) + 1;
+        y->height = max(height(y->left), height(y->right)) + 1;
+
+        return y;
+    }
+
+    node* addNode(node *x, double key) {
+
+        if (x == NULL)
+            return new node(key);
+
+        if (key < x->key)
+            x->left = addNode(x->left, key);
+        else if (key > x->key)
+            x->right = addNode(x->right, key);
+        else {
+            x->frg++;
+            return x;
+        }
+
+        x->height = max(height(x->left), height(x->right)) + 1;
+        int balance = getBalanced(x);
+
+        if (balance > 1) {
+
+            if (getBalanced(x->left) >= 0)
+                return toRight(x);
+            else {
+                x->left = toLeft(x->left);
+                return toRight(x);
+            }
+        }
+        else if (balance < -1) {
+
+            if (getBalanced(x->right) <= 0)
+                return toLeft(x);
+            else {
+                x->right = toRight(x->right);
+                return toLeft(x);
+            }
+        }
+
+        return x;
+    }
+
+    void clean(node *x) {
+
+        if (x == NULL)
+            return;
+        clean(x->left);
+        clean(x->right);
+        delete x;
+    }
+
+    void rec(node *x, vector <double>& v) {
+
+        if (x == NULL)
+            return;
+
+        rec(x->left, v);
+        for (int i = 1; i <= x->frg; i++)
+            v.push_back(x->key);
+        rec(x->right, v);
+    }
+
+public:
+
+    Set() {
+        root = NULL;
+    }
+
+    ~Set() {
+        clean(root);
+    }
+
+    void add(double k) {
+        root = addNode(root, k);
+    }
+
+    void reset() {
+        clean(root);
+        root = NULL;
+    }
+
+    void generateVector(vector <double>& v) {
+
+        rec(root, v);
+    }
+};
+
+void AVLSort(vector<double>& v) {
+
+    Set S;
+
+    for (auto &i: v)
+        S.add(i);
+
+    v.clear();
+    S.generateVector(v);
+    S.reset();
+}
+
 int main() {
 
     vector<double> v = {1, 8, 2, 55, 112, 12, 342, 2};
 
-    HeapSort(v);
+    AVLSort(v);
 
     cout << isSorted(v);
 
